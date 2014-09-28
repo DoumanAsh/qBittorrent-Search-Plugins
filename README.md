@@ -1,0 +1,2 @@
+qBittorrent-Search-Plugins
+==========================
