@@ -40,7 +40,7 @@ class tokyotoshokan(object):
             params = dict(attrs)
             if self.item_found:
                 if tag == 'a':
-                    if 'application/x-bittorrent' == params.get('type'):
+                    if params.get('type') == 'application/x-bittorrent':
                         self.current_item['link'] = params['href']
                         self.item_found_numbers += 1
                         self.item_name_found = True
@@ -63,14 +63,11 @@ class tokyotoshokan(object):
                             return
             else:
                 if tag == 'table':
-                    for attr in attrs:
-                        if 'listing' in attr:
-                            self.item_found = True
-                            self.current_item = {}
-                            break
+                    if params.get('class') == 'listing':
+                        self.item_found = True
+                        self.current_item = {}
                 elif tag == 'a':
                     if self.searchNumber < 5:
-                        params = dict(attrs)
                         #save up to 5 next search results
                         if params['href'].startswith("?lastid="):
                             self.searchIndexes.append(''.join((self.url, '/search.php', params['href'])))
