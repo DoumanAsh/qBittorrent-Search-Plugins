@@ -1,7 +1,7 @@
-#VERSION: 0.6
+#VERSION: 0.7
 #Author: Douman (custparasite@gmx.se)
 
-#Note: should work just fine for qBittorent with python3
+#Note: python3 version
 
 from novaprinter import prettyPrinter
 from helpers import download_file
@@ -18,6 +18,9 @@ class tokyotoshokan(object):
         #                        'music video': '9', 'raw': '7', 'hentai': '4',
         #                        'eroge': '14', 'batch': '11', 'jav': '15', 'other': '5'}
         #
+
+    def download_torrent(self, info):
+        print(download_file(info))
 
     class MyHtmlParseWithBlackJack(HTMLParser):
         def __init__(self, results, url, searchIndexes):
