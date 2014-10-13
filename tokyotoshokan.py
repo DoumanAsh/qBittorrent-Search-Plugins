@@ -1,4 +1,4 @@
-#VERSION: 0.5
+#VERSION: 0.6
 #Author: Douman (custparasite@gmx.se)
 
 #Note: should work just fine for qBittorent with python3
@@ -12,7 +12,7 @@ class tokyotoshokan(object):
     def __init__(self):
         self.url = 'http://tokyotosho.info'
         self.name = 'Tokyo Toshokan'
-        self.supported_categories = {'all': '0', 'anime': '1', 'eroge': '14' }
+        self.supported_categories = {'all': '0', 'anime': '1', 'games': '14' }
         #self.supported_categories = {'all': '0', 'anime': '1', 'anime(non-english)': '10',
         #                        'manga': '3', 'drama': '8', 'music': '2',
         #                        'music video': '9', 'raw': '7', 'hentai': '4',
