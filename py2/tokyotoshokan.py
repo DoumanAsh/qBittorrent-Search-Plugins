@@ -1,4 +1,4 @@
-#VERSION: 0.7
+#VERSION: 1.0
 #Author: Douman (custparasite@gmx.se)
 
 #Note: python2 version
@@ -22,7 +22,7 @@ class tokyotoshokan(object):
         print(download_file(info))
 
     class MyHtmlParseWithBlackJack(HTMLParser):
-        def __init__(self, results, url, searchIndexes):
+        def __init__(self, url, searchIndexes):
             HTMLParser.__init__(self)
             self.item_found = False
             self.item_found_numbers = 0
@@ -32,7 +32,6 @@ class tokyotoshokan(object):
             self.item_stats_seed_found = False
             self.item_stats_leech_found = False
             self.current_item = None
-            self.results = results
             self.url = url
             self.searchIndexes = searchIndexes
             self.searchNumber = 1
@@ -84,7 +83,6 @@ class tokyotoshokan(object):
                 self.current_item['engine_url'] = self.url
                 print(self.current_item)
                 prettyPrinter(self.current_item)
-                self.results += 1
                 self.item_found_numbers = 0
                 self.item_name_found = False
                 self.item_size_found = False
@@ -101,7 +99,7 @@ class tokyotoshokan(object):
                     self.item_stats_found = False
                     self.item_stats_seed_found = False
                     self.item_stats_leech_found = False
-                
+
         def handle_data(self, data):
             if self.item_name_found:
                 self.current_item['name'] += data
@@ -109,7 +107,7 @@ class tokyotoshokan(object):
                 self.current_item['size'] = 'unknown'
                 #due to utf-8 encoding
                 temp = data.split()
-                if 'Size:' in temp: 
+                if 'Size:' in temp:
                     self.current_item['size'] = temp[temp.index('Size:') + 1]
                     self.item_found_numbers += 1
                     self.item_size_found = False
@@ -126,9 +124,8 @@ class tokyotoshokan(object):
 
     def search(self, query, cat='all'):
         dat = ''
-        results = 0
         searchIndexes = []
-        parser = self.MyHtmlParseWithBlackJack(results, self.url, searchIndexes)
+        parser = self.MyHtmlParseWithBlackJack(self.url, searchIndexes)
         dat = urllib2.urlopen('{0}/search.php?terms={1}&type={2}&size_min=&size_max=&username='.format(self.url, query.replace(' ', '+'), self.supported_categories[cat]))
         parser.feed(dat.read().decode('utf-8'))
         parser.close()
