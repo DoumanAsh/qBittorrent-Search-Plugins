@@ -1,5 +1,5 @@
 """ This is the search engine for Old Pirate Bay torrent tracker """
-#VERSION: 1.00
+#VERSION: 1.1
 #AUTHOR: DoumanAsh (custparasite@gmx.se)
 
 from novaprinter import prettyPrinter
@@ -11,14 +11,14 @@ class old_pirate_bay(object):
     """ Class for search engine """
     url = "oldpiratebay.org"
     name = "The Pirate Bay by ISOhunt"
-    supported_categories = { 'all'      : '',
-                             'anime'    : '&iht=1',
-                             'software' : '&iht=2',
-                             'games'    : '&iht=3',
-                             'movies'   : '&iht=5',
-                             'music'    : '&iht=6',
-                             'tv'       : '&iht=8',
-                             'books'    : '&iht=9' }
+    supported_categories = {'all'      : '',
+                            'anime'    : '&iht=1',
+                            'software' : '&iht=2',
+                            'games'    : '&iht=3',
+                            'movies'   : '&iht=5',
+                            'music'    : '&iht=6',
+                            'tv'       : '&iht=8',
+                            'books'    : '&iht=9'}
 
     def download_torrent(self, info):
         print(download_file(info))
@@ -34,12 +34,12 @@ class old_pirate_bay(object):
             self.search_results = False #True when <tbody>, with search results, is reached
             self.search_entry = False #True when <tr>, with torrent entry, is reached
             self.desc_found = False
-            self.name_found = False
-            self.result_state = None
+            self.result_state = None #set to value of dict key for handle_data() to save
             self.more_results = False #True when there are several pages of results
             self.save_next_link = False #True when link to page with next results is found
 
         def handle_starttag(self, tag, attrs):
+            #torrent entry
             if self.search_entry:
                 params = dict(attrs)
                 if tag == "a":
@@ -49,10 +49,13 @@ class old_pirate_bay(object):
                     elif href_link.startswith('/torrent'):
                         self.current_item['desc_link'] = href_link
                         self.desc_found = True
+
                 elif tag == "td":
                     class_name = ''
                     if 'class' in params:
                         class_name = params['class']
+                    else:
+                        return
 
                     if class_name.startswith('size'):
                         self.result_state = 'size'
@@ -60,16 +63,19 @@ class old_pirate_bay(object):
                         self.result_state = 'seeds'
                     elif class_name.startswith('leech'):
                         self.result_state = 'leech'
-                elif self.desc_found and tag == "span":
-                    self.name_found = True
-                    self.desc_found = False
 
+                elif self.desc_found and tag == "span":
+                    self.desc_found = False
+                    self.result_state = 'name'
+
+            #torrents table
             elif self.search_results:
                 if tag == "tr":
                     self.search_entry = True
                     self.current_item = {}
                     self.current_item['engine_url'] = self.url
 
+            #links to additional results
             elif self.more_results:
                 params = dict(attrs)
                 if tag == "li":
@@ -108,11 +114,9 @@ class old_pirate_bay(object):
             if self.result_state is not None:
                 self.current_item[self.result_state] = data.strip()
                 self.result_state = None
-            elif self.name_found:
-                self.current_item['name'] = data.strip()
-                self.name_found = False
 
     def search(self, query, cat='all'):
+        """ Performs search via this engine """
         #connect to tracker and get initial results
         #TODO: handle ssl problem?
         connection = https("oldpiratebay.org")
@@ -133,4 +137,5 @@ class old_pirate_bay(object):
             response = connection.getresponse()
             parser.feed(response.read().decode('utf-8'))
             parser.close()
+        connection.close()
 
