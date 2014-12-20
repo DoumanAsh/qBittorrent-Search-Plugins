@@ -1,7 +1,6 @@
 """ This is the search engine for Old Pirate Bay torrent tracker """
-#VERSION: 1.1
+#VERSION: 1.2
 #AUTHOR: Douman (custparasite@gmx.se)
-#CONTRIBUTORS: Pedro (japabrasuka@gmail.com)
 
 from novaprinter import prettyPrinter
 from HTMLParser import HTMLParser
