@@ -1,5 +1,5 @@
 """ This is the search engine for Old Pirate Bay torrent tracker """
-#VERSION: 1.1
+#VERSION: 1.2
 #AUTHOR: Douman (custparasite@gmx.se)
 
 from novaprinter import prettyPrinter
@@ -9,7 +9,7 @@ from httplib import HTTPSConnection as https
 
 class old_pirate_bay(object):
     """ Class for search engine """
-    url = "oldpiratebay.org"
+    url = "https://oldpiratebay.org"
     name = "The Pirate Bay by ISOhunt"
     supported_categories = {'all'      : '',
                             'anime'    : '&iht=1',
@@ -138,4 +138,3 @@ class old_pirate_bay(object):
             parser.feed(response.read().decode('utf-8'))
             parser.close()
         connection.close()
-
