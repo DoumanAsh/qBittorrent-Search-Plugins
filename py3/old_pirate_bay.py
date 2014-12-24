@@ -121,7 +121,8 @@ class old_pirate_bay(object):
         #TODO: handle ssl problem?
         connection = https("oldpiratebay.org")
 
-        query = "".join(("/search.php?q=", query))
+        cat = cat.lower()
+        query = "".join(("/search.php?q=", query, self.supported_categories[cat]))
         connection.request("GET", query)
         response = connection.getresponse()
 

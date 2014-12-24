@@ -1,6 +1,7 @@
 """ This is the search engine for Old Pirate Bay torrent tracker """
 #VERSION: 1.2
 #AUTHOR: Douman (custparasite@gmx.se)
+#CONTRIBUTORS: Pedro (japabrasuka@gmail.com)
 
 from novaprinter import prettyPrinter
 from HTMLParser import HTMLParser
@@ -121,7 +122,8 @@ class old_pirate_bay(object):
         #TODO: handle ssl problem?
         connection = https("oldpiratebay.org")
 
-        query = "".join(("/search.php?q=", query))
+        cat = cat.lower()
+        query = "".join(("/search.php?q=", query, self.supported_categories[cat]))
         connection.request("GET", query)
         response = connection.getresponse()
 
