@@ -1,5 +1,5 @@
 """ This is the search engine for Old Pirate Bay torrent tracker """
-#VERSION: 1.2
+#VERSION: 1.3
 #AUTHOR: Douman (custparasite@gmx.se)
 #CONTRIBUTORS: Pedro (japabrasuka@gmail.com)
 
