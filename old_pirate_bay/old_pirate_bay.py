@@ -130,8 +130,8 @@ class old_pirate_bay(object):
         connection = https("oldpiratebay.org")
 
         cat = cat.lower()
+        query = query.replace("%20", '+')
         query = "".join(("/search.php?q=", query, self.supported_categories[cat]))
-        print(query)
         connection.request("GET", query)
         response = connection.getresponse()
 
