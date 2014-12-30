@@ -1,12 +1,18 @@
-#VERSION: 1.0
+#VERSION: 1.1
 #Author: Douman (custparasite@gmx.se)
 
-#Note: python3 version
+try:
+    #python3
+    from html.parser import HTMLParser
+    import urllib.request as request
+except ImportError:
+    #python2
+    from HTMLParser import HTMLParser
+    import urllib2 as request
 
+#qBt
 from novaprinter import prettyPrinter
 from helpers import download_file
-from html.parser import HTMLParser
-import urllib.request
 
 class tokyotoshokan(object):
     def __init__(self):
@@ -24,7 +30,7 @@ class tokyotoshokan(object):
 
     class MyHtmlParseWithBlackJack(HTMLParser):
         def __init__(self, url, searchIndexes):
-            super().__init__(convert_charrefs=True)
+            HTMLParser.__init__(self)
             self.item_found = False
             self.item_found_numbers = 0
             self.item_name_found = False
@@ -127,10 +133,10 @@ class tokyotoshokan(object):
         dat = ''
         searchIndexes = []
         parser = self.MyHtmlParseWithBlackJack(self.url, searchIndexes)
-        dat = urllib.request.urlopen('{0}/search.php?terms={1}&type={2}&size_min=&size_max=&username='.format(self.url, query.replace(' ', '+'), self.supported_categories[cat]))
+        dat = request.urlopen('{0}/search.php?terms={1}&type={2}&size_min=&size_max=&username='.format(self.url, query.replace(' ', '+'), self.supported_categories[cat]))
         parser.feed(dat.read().decode('utf-8'))
         parser.close()
         for searchIn in searchIndexes:
-            dat = urllib.request.urlopen(searchIn)
+            dat = request.urlopen(searchIn)
             parser.feed(dat.read().decode('utf-8'))
             parser.close()
