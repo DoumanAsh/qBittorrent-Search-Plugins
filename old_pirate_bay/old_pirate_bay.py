@@ -1,12 +1,20 @@
 """ This is the search engine for Old Pirate Bay torrent tracker """
-#VERSION: 1.3
+#VERSION: 1.5
 #AUTHOR: Douman (custparasite@gmx.se)
 #CONTRIBUTORS: Pedro (japabrasuka@gmail.com)
 
+try:
+    #python3
+    from html.parser import HTMLParser
+    from http.client import HTTPSConnection as https
+except ImportError:
+    #python2
+    from HTMLParser import HTMLParser
+    from httplib import HTTPSConnection as https
+
+#qBt
 from novaprinter import prettyPrinter
-from HTMLParser import HTMLParser
 from helpers import download_file
-from httplib import HTTPSConnection as https
 
 class old_pirate_bay(object):
     """ Class for search engine """
@@ -35,7 +43,7 @@ class old_pirate_bay(object):
             self.search_results = False #True when <tbody>, with search results, is reached
             self.search_entry = False #True when <tr>, with torrent entry, is reached
             self.desc_found = False
-            self.result_state = None #set to value of dict key for handle_data() to save
+            self.result_state = None
             self.more_results = False #True when there are several pages of results
             self.save_next_link = False #True when link to page with next results is found
 
@@ -64,7 +72,6 @@ class old_pirate_bay(object):
                         self.result_state = 'seeds'
                     elif class_name.startswith('leech'):
                         self.result_state = 'leech'
-
                 elif self.desc_found and tag == "span":
                     self.desc_found = False
                     self.result_state = 'name'
@@ -124,6 +131,7 @@ class old_pirate_bay(object):
 
         cat = cat.lower()
         query = "".join(("/search.php?q=", query, self.supported_categories[cat]))
+        print(query)
         connection.request("GET", query)
         response = connection.getresponse()
 
