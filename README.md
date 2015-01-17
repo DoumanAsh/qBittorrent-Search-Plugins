@@ -4,3 +4,7 @@ qBittorrent-Search-Plugins
 Tokyo Toshokan
 
 Old Pirate Bay by ISOhunt
+
+Torlock
+
+Nyaa Torrents
