@@ -1,5 +1,5 @@
 """ This is the search engine for Torlock torrent tracker """
-#VERSION: 1.1
+#VERSION: 1.2
 #AUTHOR: Douman (custparasite@gmx.se)
 
 try:
@@ -120,7 +120,6 @@ class torlock(object):
 
         #run through additional pages with results if any...
         parser.look_searches = False
-        print(list_searches)
         for page in list_searches:
             connection.request("GET", page)
             response = connection.getresponse()
