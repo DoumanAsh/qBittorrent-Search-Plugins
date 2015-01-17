@@ -1,5 +1,5 @@
 """ This is the search engine for Torlock torrent tracker """
-#VERSION: 1.0
+#VERSION: 1.1
 #AUTHOR: Douman (custparasite@gmx.se)
 
 try:
@@ -104,6 +104,7 @@ class torlock(object):
         connection = http("www.torlock.com")
 
         cat = cat.lower()
+        query = query.replace("%20", "-")
         #/[category]/torrents/[query].html?sort=seeds
         query = "".join((self.url, "/", self.supported_categories[cat], "/torrents/", query, ".html?sort=seeds"))
         connection.request("GET", query)
