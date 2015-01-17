@@ -32,7 +32,7 @@ class SukubeiNyaa(object):
     """ Class of search engine """
     def __init__(self):
         self.url = "http://www.sukubei.nyaa.se"
-        self.name = "SukubeiNyaa"
+        self.name = "Sukubei Nyaa"
         self.supported_categories = {'all'      : '0_0',
                                      'anime'    : '7_25',
                                      'books'    : '7_26',
