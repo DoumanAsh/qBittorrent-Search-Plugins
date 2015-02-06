@@ -1,5 +1,5 @@
 """ This is the search engine for Torlock torrent tracker """
-#VERSION: 1.2
+#VERSION: 1.5
 #AUTHOR: Douman (custparasite@gmx.se)
 
 try:
@@ -73,8 +73,8 @@ class torlock(object):
 
                 if link is not None:
                     if link.startswith("/torrent"):
-                        self.current_item["desc_link"] = link
-                        self.current_item["link"] = "".join(("http://www.torlock.com/tor/", link.split('/')[1], ".torrent"))
+                        self.current_item["desc_link"] = "".join((self.engine_url, link))
+                        self.current_item["link"] = "".join(("http://www.torlock.com/tor/", link.split('/')[2], ".torrent"))
                         self.current_item["engine_url"] = self.engine_url
                         self.item_found = True
                         self.item_name = "name"
