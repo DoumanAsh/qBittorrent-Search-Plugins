@@ -1,5 +1,5 @@
 """ This is the search engine for Sukubei Nyaa torrent tracker """
-#VERSION: 1.0
+#VERSION: 1.1
 #AUTHOR: Douman (custparasite@gmx.se)
 
 try:
@@ -30,8 +30,8 @@ class ParserLogic():
 
 class SukubeiNyaa(object):
     """ Class of search engine """
+    url = "http://www.sukubei.nyaa.se"
     def __init__(self):
-        self.url = "http://www.sukubei.nyaa.se"
         self.name = "Sukubei Nyaa"
         self.supported_categories = {'all'      : '0_0',
                                      'anime'    : '7_25',

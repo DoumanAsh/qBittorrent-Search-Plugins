@@ -15,8 +15,8 @@ from novaprinter import prettyPrinter
 from helpers import download_file
 
 class tokyotoshokan(object):
+    url = 'http://tokyotosho.info'
     def __init__(self):
-        self.url = 'http://tokyotosho.info'
         self.name = 'Tokyo Toshokan'
         self.supported_categories = {'all': '0', 'anime': '1', 'games': '14' }
         #self.supported_categories = {'all': '0', 'anime': '1', 'anime(non-english)': '10',

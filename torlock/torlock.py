@@ -1,5 +1,5 @@
 """ This is the search engine for Torlock torrent tracker """
-#VERSION: 1.5
+#VERSION: 1.6
 #AUTHOR: Douman (custparasite@gmx.se)
 
 try:
@@ -17,8 +17,8 @@ from helpers import download_file
 
 class torlock(object):
     """ Class for search engine """
+    url = "http://www.torlock.com"
     def __init__(self):
-        self.url = "http://www.torlock.com"
         self.name = "Torlock"
         self.supported_categories = {'all'      : 'all',
                                      'anime'    : 'anime',
