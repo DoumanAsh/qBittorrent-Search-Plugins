@@ -1,4 +1,4 @@
-#VERSION: 1.00
+#VERSION: 1.01
 #AUTHORS: Douman (custparasite@gmx.se)
 
 try:
@@ -10,6 +10,7 @@ except ImportError:
 
 from re import compile as re_compile
 from re import DOTALL
+from itertools import islice
 #qBt
 from novaprinter import prettyPrinter
 from helpers import download_file
@@ -39,6 +40,7 @@ class demonoid(object):
             self.current_item = None
             self.save_data = None
             self.seeds_leech = False
+            self.size_repl = re_compile(",")
 
         def handle_starttag(self, tag, attrs):
             """ Parser's start tag handler """
@@ -81,7 +83,7 @@ class demonoid(object):
                 self.current_item[self.save_data] = data
                 self.save_data = None
                 if self.current_item.__len__() == 7:
-                    print(self.current_item)
+                    self.current_item["size"] = self.size_repl.sub("", self.current_item["size"])
                     prettyPrinter(self.current_item)
                     self.current_item = None
 
@@ -114,8 +116,7 @@ class demonoid(object):
         del data
 
         if list_results:
-            list_results = [add_res_list.search(result).group(0) for result in list_results[1].split(" | ")][:10]
-            for search_query in list_results:
+            for search_query in islice((add_res_list.search(result).group(0) for result in list_results[1].split(" | ")), 0, 10):
                 connection.request("GET", search_query)
                 response = connection.getresponse()
                 parser.feed(torrent_list.search(response.read().decode('utf-8')).group(0))
