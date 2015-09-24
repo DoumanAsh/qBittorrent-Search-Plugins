@@ -1,5 +1,5 @@
-#VERSION: 1.1
-#Author: Douman (custparasite@gmx.se)
+#VERSION: 2.0
+#Author: Douman (douman@gmx.se)
 
 try:
     #python3
@@ -9,6 +9,8 @@ except ImportError:
     #python2
     from HTMLParser import HTMLParser
     import urllib2 as request
+
+from re import compile as re_compile
 
 #qBt
 from novaprinter import prettyPrinter
@@ -29,114 +31,82 @@ class tokyotoshokan(object):
         print(download_file(info))
 
     class MyHtmlParseWithBlackJack(HTMLParser):
-        def __init__(self, url, searchIndexes):
+        def __init__(self, url):
             HTMLParser.__init__(self)
-            self.item_found = False
-            self.item_found_numbers = 0
-            self.item_name_found = False
-            self.item_size_found = False
-            self.item_stats_found = False
-            self.item_stats_seed_found = False
-            self.item_stats_leech_found = False
-            self.current_item = None
             self.url = url
-            self.searchIndexes = searchIndexes
-            self.searchNumber = 1
+            self.current_item = None
+            self.size_found = False
+            self.name_found = False
+            self.stats_found = False
+            self.stat_name = None
 
         def handle_starttag(self, tag, attrs):
             params = dict(attrs)
-            if self.item_found:
-                if tag == 'a':
-                    if params['href'].startswith('magnet:'):
-                        self.current_item['link'] = params['href']
-                        self.item_found_numbers += 1
-                    if params.get('type') == 'application/x-bittorrent':
-                        self.item_name_found = True
-                        self.current_item['name']  = ''
-                        return
-                elif tag == 'td':
-                    if params.get('class') == 'desc-bot':
-                        self.item_size_found = True
-                        return
-                    if params.get('class') == 'stats':
-                        self.item_stats_found = True
-                        return
-                elif self.item_stats_found:
-                    if tag == 'span':
-                        if not self.item_stats_seed_found:
-                            self.item_stats_seed_found = True
-                            return
-                        if not self.item_stats_leech_found:
-                            self.item_stats_leech_found = True
-                            return
-            else:
-                if tag == 'table':
-                    if params.get('class') == 'listing':
-                        self.item_found = True
-                        self.current_item = {}
-                elif tag == 'a':
-                    if self.searchNumber < 5:
-                        #save up to 5 next search results
-                        if params['href'].startswith("?lastid="):
-                            self.searchIndexes.append(''.join((self.url, '/search.php', params['href'])))
-                            self.searchNumber += 1
+            if self.current_item:
+                if tag == "a":
+                    if params["href"].startswith("magnet"):
+                        self.current_item["link"] = params["href"]
+                    elif params["href"].endswith("torrent"):
+                        self.name_found = True
+                        self.current_item["name"] = ""
+                    elif params["href"].startswith("details"):
+                        self.current_item["desc_link"] = "".join((self.url, "/", params["href"]))
+
+                elif tag == "td" and "class" in params:
+                    if params["class"] == "desc-bot":
+                        self.size_found = True
+                        self.current_item['size'] = 'Unknown'
+                    elif params["class"] == "stats":
+                        self.stats_found = True
+
+                elif self.stats_found and tag == "span" and "leech" not in self.current_item:
+                    self.stat_name = "leech" if "seeds" in self.current_item else "seeds"
+
+            elif tag == "tr" and "class" in params:
+                if params["class"].find("category"):
+                    self.current_item = dict()
+                    self.current_item["engine_url"] = self.url
 
         def handle_endtag(self, tag):
-            if tag == 'a' and self.item_name_found:
-                self.item_name_found = False
-                self.item_found_numbers += 1
-                return
-            if self.item_found_numbers == 5:
-                self.current_item['engine_url'] = self.url
-                print(self.current_item)
+            if tag == "a":
+                if self.name_found:
+                    self.name_found = False
+            elif self.current_item and tag == "tr" and len(self.current_item) == 7:
                 prettyPrinter(self.current_item)
-                self.item_found_numbers = 0
-                self.item_name_found = False
-                self.item_size_found = False
-                self.item_stats_found = False
-                self.item_stats_seed_found = False
-                self.item_stats_leech_found = False
-                return
-            if tag == 'table':
-                if self.item_found:
-                    self.item_found = False
-                    self.item_found_numbers = 0
-                    self.item_name_found = False
-                    self.item_size_found = False
-                    self.item_stats_found = False
-                    self.item_stats_seed_found = False
-                    self.item_stats_leech_found = False
+                self.current_item = None
+                self.size_found = False
+                self.name_found = False
+                self.stats_found = False
+                self.stat_name = None
 
         def handle_data(self, data):
-            if self.item_name_found:
-                self.current_item['name'] += data
-            if self.item_size_found:
-                self.current_item['size'] = 'unknown'
-                #due to utf-8 encoding
+            if self.name_found:
+                self.current_item["name"] += data
+            elif self.size_found:
+                #due to utf-8 encoding there will be several pieces
                 temp = data.split()
                 if 'Size:' in temp:
                     self.current_item['size'] = temp[temp.index('Size:') + 1]
-                    self.item_found_numbers += 1
-                    self.item_size_found = False
-            if self.item_stats_leech_found:
-                if data.isdigit():
-                    self.current_item['leech'] = data
-                    self.item_found_numbers += 1
-                    self.item_stats_seed_found = False
-                    self.item_stats_leech_found = False
-            elif self.item_stats_seed_found:
-                if data.isdigit():
-                    self.current_item['seeds'] = data
-                    self.item_found_numbers += 1
+                    self.size_found = False
+            elif self.stat_name:
+                self.current_item[self.stat_name] = data
+
 
     def search(self, query, cat='all'):
-        dat = ''
-        searchIndexes = []
-        parser = self.MyHtmlParseWithBlackJack(self.url, searchIndexes)
-        dat = request.urlopen('{0}/search.php?terms={1}&type={2}&size_min=&size_max=&username='.format(self.url, query.replace(' ', '+'), self.supported_categories[cat]))
-        parser.feed(dat.read().decode('utf-8'))
+        query = query.replace(' ', '+')
+        parser = self.MyHtmlParseWithBlackJack(self.url)
+        torrent_list = re_compile("(?s)<table class=\"listing\">(.*)</table>")
+        additional_links = re_compile("/?lastid=[0-9]+&amp;page=[0-9]+&amp;terms={}".format(query))
+
+        data = request.urlopen('{0}/search.php?terms={1}&type={2}&size_min=&size_max=&username='.format(self.url, query, self.supported_categories[cat]))
+        data = data.read().decode('utf-8')
+        additional_links = additional_links.findall(data)
+
+        data = torrent_list.search(data).group(0)
+        parser.feed(data)
         parser.close()
-        for searchIn in searchIndexes:
-            dat = request.urlopen(searchIn)
-            parser.feed(dat.read().decode('utf-8'))
+        for res_link in map(lambda link: "".join((self.url, "/search.php?", link.replace("amp;", ""))), additional_links):
+            data = request.urlopen(res_link)
+            data = torrent_list.search(data.read().decode('utf-8')).group(0)
+            parser.feed(data)
             parser.close()
