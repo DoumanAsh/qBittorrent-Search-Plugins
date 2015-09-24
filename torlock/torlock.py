@@ -1,5 +1,5 @@
 """ This is the search engine for Torlock torrent tracker """
-#VERSION: 1.6
+#VERSION: 1.7
 #AUTHOR: Douman (custparasite@gmx.se)
 
 try:
@@ -52,10 +52,10 @@ class torlock(object):
             if self.item_found:
                 if tag == "td":
                     params = dict(attrs)
-                    try:
-                        self.item_name = self.parser_class[params["class"]]
-                    except KeyError:
-                        self.item_name = None
+                    if "class" in params:
+                        self.item_name = self.parser_class.get(params["class"], None)
+                        if self.item_name:
+                            self.current_item[self.item_name] = ""
 
             elif self.look_searches and tag == "div":
                 try:
@@ -78,6 +78,7 @@ class torlock(object):
                         self.current_item["engine_url"] = self.engine_url
                         self.item_found = True
                         self.item_name = "name"
+                        self.current_item["name"] = ""
                     elif self.found_pag:
                         if link.startswith("http"):
                             self.list_searches.append(link)
@@ -88,12 +89,13 @@ class torlock(object):
 
         def handle_data(self, data):
             if self.item_name:
-                self.current_item[self.item_name] = data
-                self.item_name = None
+                self.current_item[self.item_name] += data
 
         def handle_endtag(self, tag):
             if tag == "article":
                 self.article_found = False
+            elif self.item_name and (tag == "a" or tag == "td"):
+                self.item_name = None
             elif self.item_found and tag == "tr":
                 self.item_found = False
                 prettyPrinter(self.current_item)
