@@ -1,15 +1,17 @@
 """ This is the search engine for Torlock torrent tracker """
-#VERSION: 1.7
+#VERSION: 1.8
 #AUTHOR: Douman (custparasite@gmx.se)
 
 try:
     #python3
     from html.parser import HTMLParser
-    from http.client import HTTPConnection as http
+    from http.client import HTTPSConnection as http
 except ImportError:
     #python2
     from HTMLParser import HTMLParser
-    from httplib import HTTPConnection as http
+    from httplib import HTTPSConnection as http
+
+from re import compile as re_compile
 
 #qbt
 from novaprinter import prettyPrinter
@@ -17,7 +19,7 @@ from helpers import download_file
 
 class torlock(object):
     """ Class for search engine """
-    url = "http://www.torlock.com"
+    url = "https://www.torlock.com"
     def __init__(self):
         self.name = "Torlock"
         self.supported_categories = {'all'      : 'all',
@@ -34,11 +36,9 @@ class torlock(object):
 
     class MyHtmlParseWithBlackJack(HTMLParser):
         """ Sub-class for parsing results """
-        def __init__(self, list_searches):
+        def __init__(self):
             HTMLParser.__init__(self)
-            self.look_searches = True #whatever to look or not for next search pages
-            self.found_pag = False #when next results are found
-            self.list_searches = list_searches
+            self.look_searches = True #whenever to look or not for next search pages
             self.engine_url = None
             self.article_found = False #true when <article> with results is found
             self.item_found = False
@@ -57,13 +57,6 @@ class torlock(object):
                         if self.item_name:
                             self.current_item[self.item_name] = ""
 
-            elif self.look_searches and tag == "div":
-                try:
-                    self.found_pag = "pag" in attrs[0]
-                except IndexError:
-                    self.found_pag = False
-
-
             elif self.article_found and tag == "a":
                 params = dict(attrs)
                 try:
@@ -79,9 +72,6 @@ class torlock(object):
                         self.item_found = True
                         self.item_name = "name"
                         self.current_item["name"] = ""
-                    elif self.found_pag:
-                        if link.startswith("http"):
-                            self.list_searches.append(link)
 
             elif tag == "article":
                 self.article_found = True
@@ -103,10 +93,11 @@ class torlock(object):
 
     def search(self, query, cat='all'):
         """ Performs search """
-        connection = http("www.torlock.com")
-
         cat = cat.lower()
         query = query.replace("%20", "-")
+        connection = http("www.torlock.com")
+
+        additional_pages = re_compile("/{0}/torrents/{1}.html\?sort=seeds&page=[0-9]+".format(self.supported_categories[cat], query))
         #/[category]/torrents/[query].html?sort=seeds
         query = "".join((self.url, "/", self.supported_categories[cat], "/torrents/", query, ".html?sort=seeds"))
         connection.request("GET", query)
@@ -114,18 +105,21 @@ class torlock(object):
         if response.status != 200:
             return
 
-        list_searches = []
-        parser = self.MyHtmlParseWithBlackJack(list_searches)
+        data = response.read().decode('utf-8')
+
+        list_searches = additional_pages.findall(data)[:-1] #last link is next(i.e. second)
+
+        parser = self.MyHtmlParseWithBlackJack()
         parser.engine_url = self.url
-        parser.feed(response.read().decode('utf-8'))
+        parser.feed(data)
         parser.close()
 
         #run through additional pages with results if any...
-        parser.look_searches = False
-        for page in list_searches:
+        for page in map(lambda link: "".join((self.url, link)), list_searches):
             connection.request("GET", page)
             response = connection.getresponse()
-            parser.feed(response.read().decode('utf-8'))
+            data = response.read().decode('utf-8')
+            parser.feed(data)
             parser.close()
 
         connection.close()
