@@ -22,14 +22,16 @@ class torlock(object):
     url = "https://www.torlock.com"
     def __init__(self):
         self.name = "Torlock"
-        self.supported_categories = {'all'      : 'all',
-                                     'anime'    : 'anime',
-                                     'software' : 'software',
-                                     'games'    : 'game',
-                                     'movies'   : 'movie',
-                                     'music'    : 'music',
-                                     'tv'       : 'television',
-                                     'books'    : 'ebooks'}
+        self.supported_categories = {
+                'all'      : 'all',
+                'anime'    : 'anime',
+                'software' : 'software',
+                'games'    : 'game',
+                'movies'   : 'movie',
+                'music'    : 'music',
+                'tv'       : 'television',
+                'books'    : 'ebooks'
+                }
 
     def download_torrent(self, info):
         print(download_file(info))
