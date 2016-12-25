@@ -1,20 +1,18 @@
-#VERSION: 2.0
+#VERSION: 2.1
 #Author: Douman (douman@gmx.se)
 
 try:
     #python3
     from html.parser import HTMLParser
-    import urllib.request as request
 except ImportError:
     #python2
     from HTMLParser import HTMLParser
-    import urllib2 as request
 
 from re import compile as re_compile
 
 #qBt
 from novaprinter import prettyPrinter
-from helpers import download_file
+from helpers import download_file, retrieve_url
 
 class tokyotoshokan(object):
     url = 'http://tokyotosho.info'
@@ -33,6 +31,7 @@ class tokyotoshokan(object):
     class MyHtmlParseWithBlackJack(HTMLParser):
         def __init__(self, url):
             HTMLParser.__init__(self)
+            self.get_size_regex = re_compile(".*Size:\s+([^ ]*)\s+.*")
             self.url = url
             self.current_item = None
             self.size_found = False
@@ -59,7 +58,7 @@ class tokyotoshokan(object):
                     elif params["class"] == "stats":
                         self.stats_found = True
 
-                elif self.stats_found and tag == "span" and "leech" not in self.current_item:
+                elif self.stats_found and tag == "span":
                     self.stat_name = "leech" if "seeds" in self.current_item else "seeds"
 
             elif tag == "tr" and "class" in params:
@@ -71,6 +70,8 @@ class tokyotoshokan(object):
             if tag == "a":
                 if self.name_found:
                     self.name_found = False
+            elif tag == "span":
+                self.stat_name = None
             elif self.current_item and tag == "tr" and len(self.current_item) == 7:
                 prettyPrinter(self.current_item)
                 self.current_item = None
@@ -83,10 +84,10 @@ class tokyotoshokan(object):
             if self.name_found:
                 self.current_item["name"] += data
             elif self.size_found:
-                #due to utf-8 encoding there will be several pieces
-                temp = data.split()
-                if 'Size:' in temp:
-                    self.current_item['size'] = temp[temp.index('Size:') + 1]
+                # There can be several pieces.
+                result = self.get_size_regex.search(data)
+                if result:
+                    self.current_item['size'] = result.group(1)
                     self.size_found = False
             elif self.stat_name:
                 self.current_item[self.stat_name] = data
@@ -95,18 +96,18 @@ class tokyotoshokan(object):
     def search(self, query, cat='all'):
         query = query.replace(' ', '+')
         parser = self.MyHtmlParseWithBlackJack(self.url)
-        torrent_list = re_compile("(?s)<table class=\"listing\">(.*)</table>")
-        additional_links = re_compile("/?lastid=[0-9]+&amp;page=[0-9]+&amp;terms={}".format(query))
 
-        data = request.urlopen('{0}/search.php?terms={1}&type={2}&size_min=&size_max=&username='.format(self.url, query, self.supported_categories[cat]))
-        data = data.read().decode('utf-8')
-        additional_links = additional_links.findall(data)
+        torrent_list = re_compile("(?s)<table class=\"listing\">(.*)</table>")
+        additional_links = re_compile("/?lastid=[0-9]+&page=[0-9]+&terms={}".format(query))
+
+        request_url = '{0}/search.php?terms={1}&type={2}&size_min=&size_max=&username='.format(self.url, query, self.supported_categories[cat])
+        data = retrieve_url(request_url)
 
         data = torrent_list.search(data).group(0)
         parser.feed(data)
         parser.close()
-        for res_link in map(lambda link: "".join((self.url, "/search.php?", link.replace("amp;", ""))), additional_links):
-            data = request.urlopen(res_link)
-            data = torrent_list.search(data.read().decode('utf-8')).group(0)
+        for res_link in map(lambda link: "".join((self.url, "/search.php?", link.group(0))), additional_links.finditer(data)):
+            data = retrieve_url(res_link)
+            data = torrent_list.search(data).group(0)
             parser.feed(data)
             parser.close()
