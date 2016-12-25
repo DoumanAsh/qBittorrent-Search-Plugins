@@ -45,7 +45,7 @@ class tokyotoshokan(object):
                 if tag == "a":
                     if params["href"].startswith("magnet"):
                         self.current_item["link"] = params["href"]
-                    elif params["href"].endswith("torrent"):
+                    elif 'type' in params and params["type"] == "application/x-bittorrent":
                         self.name_found = True
                         self.current_item["name"] = ""
                     elif params["href"].startswith("details"):
